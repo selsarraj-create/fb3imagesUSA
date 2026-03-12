@@ -223,6 +223,13 @@
       btn.innerHTML = '<span class="spinner"></span> Finding your application...';
       document.getElementById("lookupStatus").style.display = "none";
 
+      // Sanitize phone: strip non-digits, ensure +1 prefix for US
+      if (phone) {
+        var digits = phone.replace(/\D/g, '');
+        if (digits.length === 10) digits = '1' + digits;
+        phone = '+' + digits;
+      }
+
       var payload = phone ? { phone: phone } : { email: email };
 
       fetch(API_BASE, {
