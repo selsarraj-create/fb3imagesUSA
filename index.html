@@ -117,9 +117,9 @@
     <div class="section" id="lookupSection">
       <h1>Almost There!</h1>
       <p class="subtitle">Enter the phone number or email you used on your application to continue.</p>
-      <input class="input-field" id="phoneInput" type="tel" placeholder="Phone number" autocomplete="off" oninput="document.getElementById('emailInput').value=''">
+      <input class="input-field" id="phoneInput" type="tel" placeholder="Phone number" autocomplete="tel" oninput="document.getElementById('emailInput').value=''">
       <div class="divider">or</div>
-      <input class="input-field" id="emailInput" type="email" placeholder="Email address" autocomplete="off" oninput="document.getElementById('phoneInput').value=''">
+      <input class="input-field" id="emailInput" type="email" placeholder="Email address" autocomplete="email" oninput="document.getElementById('phoneInput').value=''">
       <button class="btn btn-primary" id="lookupBtn" onclick="lookupLead()">Find My Application</button>
       <div class="status-message" id="lookupStatus"></div>
     </div>
