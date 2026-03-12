@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Upload Your Photo — NYC Scouts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container { width: 100%; max-width: 420px; text-align: center; }
+
+    .logo {
+      font-size: 14px; font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: 28px; font-weight: 700; margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff 0%, #a8b4ff 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 15px; color: rgba(255,255,255,0.6);
+      line-height: 1.6; margin-bottom: 32px;
+    }
+
+    .input-field {
+      width: 100%; padding: 16px;
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 14px;
+      font-size: 16px; font-family: inherit;
+      background: rgba(255,255,255,0.06); color: #fff;
+      outline: none; transition: border-color 0.3s; margin-bottom: 12px;
+    }
+    .input-field:focus { border-color: rgba(168,180,255,0.5); }
+    .input-field::placeholder { color: rgba(255,255,255,0.3); }
+
+    .divider { color: rgba(255,255,255,0.3); font-size: 13px; margin: 4px 0; }
+
+    .upload-area {
+      border: 2px dashed rgba(255,255,255,0.15); border-radius: 20px;
+      padding: 48px 24px; cursor: pointer; transition: all 0.3s ease;
+      background: rgba(255,255,255,0.03);
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: rgba(168,180,255,0.4); background: rgba(168,180,255,0.05);
+    }
+    .upload-area.has-image { padding: 16px; border-color: rgba(100,255,150,0.4); }
+    .upload-icon { font-size: 48px; margin-bottom: 16px; }
+    .upload-text { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+    .upload-hint { font-size: 13px; color: rgba(255,255,255,0.4); }
+    .preview { max-width: 100%; max-height: 300px; border-radius: 12px; display: none; }
+    .upload-area.has-image .preview { display: block; }
+    .upload-area.has-image .upload-icon,
+    .upload-area.has-image .upload-text,
+    .upload-area.has-image .upload-hint { display: none; }
+    input[type="file"] { display: none; }
+
+    .btn {
+      width: 100%; padding: 16px; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 600; font-family: inherit;
+      cursor: pointer; margin-top: 16px; transition: all 0.3s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-1px); opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-change {
+      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); margin-top: 12px;
+    }
+
+    .status-message {
+      margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 14px; display: none;
+    }
+    .status-message.error {
+      display: block; background: rgba(255,100,100,0.1);
+      border: 1px solid rgba(255,100,100,0.2); color: #ffb0b0;
+    }
+    .status-message.info {
+      display: block; background: rgba(100,150,255,0.1);
+      border: 1px solid rgba(100,150,255,0.2); color: #b0c4ff;
+    }
+
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .done-container { display: none; }
+    .done-container .check { font-size: 64px; margin-bottom: 16px; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">NYC Scouts</div>
+
+    <!-- SECTION 1: Lookup (no ID in URL) -->
+    <div class="section" id="lookupSection">
+      <h1>Almost There!</h1>
+      <p class="subtitle">Enter the phone number or email you used on your application to continue.</p>
+      <input class="input-field" id="phoneInput" type="tel" placeholder="Phone number" autocomplete="tel">
+      <div class="divider">or</div>
+      <input class="input-field" id="emailInput" type="email" placeholder="Email address" autocomplete="email">
+      <button class="btn btn-primary" id="lookupBtn" onclick="lookupLead()">Find My Application</button>
+      <div class="status-message" id="lookupStatus"></div>
+    </div>
+
+    <!-- SECTION 2: Upload photo -->
+    <div class="section" id="uploadSection">
+      <h1 id="greeting">Hi there!</h1>
+      <p class="subtitle">Your modeling application is almost complete. Upload a recent photo to move forward.</p>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">Tap to take or choose a photo</div>
+        <div class="upload-hint">JPG, PNG or HEIC</div>
+        <img class="preview" id="preview" alt="Preview">
+      </div>
+      <input type="file" id="fileInput" accept="image/*" capture="user">
+      <button class="btn btn-primary" id="submitBtn" disabled onclick="uploadPhoto()">Submit Photo</button>
+      <button class="btn btn-change" id="changeBtn" style="display:none" onclick="document.getElementById('fileInput').click()">Choose Different Photo</button>
+      <div class="status-message" id="uploadStatus"></div>
+    </div>
+
+    <!-- SECTION 3: Done -->
+    <div class="section" id="doneSection">
+      <div class="done-container" style="display:block">
+        <div class="check">🎉</div>
+        <h1>Photo Received!</h1>
+        <p class="subtitle">Thank you! Your application is now complete. We'll be in touch soon.</p>
+      </div>
+    </div>
+
+    <!-- SECTION 4: Already done -->
+    <div class="section" id="alreadyDoneSection">
+      <div class="done-container" style="display:block">
+        <div class="check">✅</div>
+        <h1>Already Received!</h1>
+        <p class="subtitle">We already have your photo on file. We'll be in touch soon!</p>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Expired -->
+    <div class="section" id="expiredSection">
+      <h1>Link Expired</h1>
+      <p class="subtitle">This upload link is no longer valid. If you need help, please contact us.</p>
+    </div>
+  </div>
+
+  <script>
+    // ── CONFIG: Change this to your Supabase project URL ──────────
+    var API_BASE = "https://asduhgmqlhgmxecgyjcd.supabase.co/functions/v1/upload-page";
+
+    var currentLeadId = null;
+    var retryCount = 0;
+    var maxRetries = 10;
+
+    // ── Init: Check URL for lead ID ────────────────────────────────
+    (function init() {
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get("id");
+
+      if (id) {
+        // Direct link from SMS — look up lead info
+        fetch(API_BASE + "?id=" + id)
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.found && d.state === "ready") {
+              currentLeadId = id;
+              showUploadSection(d.firstname);
+            } else if (d.found && d.state === "already_done") {
+              showSection("alreadyDoneSection");
+            } else {
+              showSection("expiredSection");
+            }
+          })
+          .catch(function() { showSection("expiredSection"); });
+      } else {
+        // No ID — show lookup form
+        showSection("lookupSection");
+      }
+    })();
+
+    function showSection(id) {
+      document.querySelectorAll(".section").forEach(function(s) { s.classList.remove("active"); });
+      document.getElementById(id).classList.add("active");
+    }
+
+    function showUploadSection(firstname) {
+      document.getElementById("greeting").textContent = "Hi " + (firstname || "there") + "! 👋";
+      showSection("uploadSection");
+    }
+
+    // ── Lookup by phone/email ──────────────────────────────────────
+    function lookupLead() {
+      var phone = document.getElementById("phoneInput").value.trim();
+      var email = document.getElementById("emailInput").value.trim();
+      if (!phone && !email) {
+        showLookupStatus("Please enter your phone number or email address.", "error");
+        return;
+      }
+
+      var btn = document.getElementById("lookupBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Finding your application...';
+      document.getElementById("lookupStatus").style.display = "none";
+
+      var payload = phone ? { phone: phone } : { email: email };
+
+      fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.found) {
+          currentLeadId = d.lead_id;
+          showUploadSection(d.firstname);
+        } else {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            showLookupStatus("Processing your application... trying again in a few seconds (" + retryCount + "/" + maxRetries + ")", "info");
+            setTimeout(lookupLead, 3000);
+          } else {
+            showLookupStatus("We couldn't find your application yet. Please check your details or wait for our SMS with a direct link.", "error");
+            btn.disabled = false;
+            btn.textContent = "Try Again";
+            retryCount = 0;
+          }
+        }
+      })
+      .catch(function() {
+        showLookupStatus("Network error. Please try again.", "error");
+        btn.disabled = false;
+        btn.textContent = "Find My Application";
+      });
+    }
+
+    function showLookupStatus(msg, type) {
+      var el = document.getElementById("lookupStatus");
+      el.className = "status-message " + type;
+      el.textContent = msg;
+    }
+
+    // ── File selection + preview ───────────────────────────────────
+    var fileInput = document.getElementById("fileInput");
+    var uploadArea = document.getElementById("uploadArea");
+    var preview = document.getElementById("preview");
+    var submitBtn = document.getElementById("submitBtn");
+    var changeBtn = document.getElementById("changeBtn");
+
+    fileInput.addEventListener("change", function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        preview.src = ev.target.result;
+        uploadArea.classList.add("has-image");
+        submitBtn.disabled = false;
+        changeBtn.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Drag & drop
+    uploadArea.addEventListener("dragover", function(e) { e.preventDefault(); uploadArea.classList.add("dragover"); });
+    uploadArea.addEventListener("dragleave", function() { uploadArea.classList.remove("dragover"); });
+    uploadArea.addEventListener("drop", function(e) {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event("change"));
+      }
+    });
+
+    // ── Upload photo ──────────────────────────────────────────────
+    function uploadPhoto() {
+      var file = fileInput.files[0];
+      if (!file || !currentLeadId) return;
+
+      var statusMsg = document.getElementById("uploadStatus");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+      statusMsg.style.display = "none";
+
+      var fd = new FormData();
+      fd.append("photo", file);
+      fd.append("lead_id", currentLeadId);
+
+      fetch(API_BASE, { method: "POST", body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) {
+            showSection("doneSection");
+          } else {
+            statusMsg.className = "status-message error";
+            statusMsg.textContent = d.error || "Something went wrong. Please try again.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Photo";
+          }
+        })
+        .catch(function() {
+          statusMsg.className = "status-message error";
+          statusMsg.textContent = "Network error. Please check your connection and try again.";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Photo";
+        });
+    }
+  </script>
+</body>
+</html>
