@@ -155,6 +155,7 @@
         <div class="check">✅</div>
         <h1>Already Received!</h1>
         <p class="subtitle">We already have your photo on file. We'll be in touch soon!</p>
+        <img id="existingPhoto" style="max-width:100%;max-height:300px;border-radius:12px;margin-top:24px;display:none" alt="Your uploaded photo">
       </div>
     </div>
 
@@ -209,6 +210,15 @@
       showSection("uploadSection");
     }
 
+    function showAlreadyDone(imageUrl) {
+      if (imageUrl) {
+        var photo = document.getElementById("existingPhoto");
+        photo.src = imageUrl;
+        photo.style.display = "block";
+      }
+      showSection("alreadyDoneSection");
+    }
+
     // ── Lookup by phone/email ──────────────────────────────────────
     function lookupLead() {
       var phone = document.getElementById("phoneInput").value.trim();
@@ -239,9 +249,11 @@
       })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (d.found) {
+        if (d.found && d.state === "ready") {
           currentLeadId = d.lead_id;
           showUploadSection(d.firstname);
+        } else if (d.found && d.state === "already_done") {
+          showAlreadyDone(d.image_url);
         } else {
           retryCount++;
           if (retryCount < maxRetries) {
